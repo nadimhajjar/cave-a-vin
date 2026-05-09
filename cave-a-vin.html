@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ma Cave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #1a0a0f;
+    --bg2:       #240e15;
+    --bg3:       #2e1420;
+    --bg4:       #3a1a28;
+    --border:    rgba(255,255,255,0.08);
+    --border2:   rgba(255,255,255,0.14);
+    --em:        #2ecc8a;
+    --em-dim:    rgba(46,204,138,0.15);
+    --em-mid:    rgba(46,204,138,0.35);
+    --em-text:   #5ddba8;
+    --text:      #f5ede8;
+    --text-2:    rgba(245,237,232,0.70);
+    --text-3:    rgba(245,237,232,0.40);
+    --text-4:    rgba(245,237,232,0.20);
+    --red:       #e05c72;
+    --gold:      #e8b86d;
+    --rose-c:    #e8839a;
+    --blue-c:    #6ab8d4;
+    --honey:     #d4915a;
+    --s-early:   #6ab8d4;
+    --s-peak:    #2ecc8a;
+    --s-decline: #e05c72;
+    --radius:    12px;
+    --radius-sm: 8px;
+    --safe-top:  env(safe-area-inset-top, 44px);
+    --safe-bot:  env(safe-area-inset-bottom, 20px);
+    --nav-h:     68px;
+    --font:      'Plus Jakarta Sans', sans-serif;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+  body::after{content:'';position:fixed;top:-80px;left:-80px;width:340px;height:340px;background:radial-gradient(circle,rgba(46,204,138,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;padding-top:var(--safe-top);padding-bottom:calc(var(--nav-h) + var(--safe-bot));z-index:1}
+  .screen.active{display:flex}
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:0 16px 24px}
+  .scroll::-webkit-scrollbar{display:none}
+
+  /* HEADER */
+  .ph{flex-shrink:0;padding:22px 20px 14px;display:flex;align-items:center;justify-content:space-between}
+  .ph-title{font-size:26px;font-weight:700;letter-spacing:-0.5px;color:var(--text);line-height:1.1}
+  .ph-sub{font-size:12px;color:var(--text-3);font-weight:400;margin-top:3px}
+  .ph-btn{background:var(--em);color:#0d2b1e;border:none;border-radius:100px;padding:10px 18px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:transform .12s,opacity .12s;white-space:nowrap}
+  .ph-btn:active{transform:scale(.95);opacity:.85}
+
+  /* STATS */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 16px 18px;flex-shrink:0}
+  .stat{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:14px 12px;text-align:center}
+  .stat-v{font-size:28px;font-weight:700;line-height:1;color:var(--text)}
+  .stat-v.em{color:var(--em-text)}
+  .stat-l{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;margin-top:5px;font-weight:600}
+
+  /* FILTERS */
+  .filters{display:flex;gap:7px;margin:0 16px 14px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .flt{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--text-3);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap}
+  .flt.on{background:var(--em-dim);border-color:var(--em);color:var(--em-text)}
+  .cdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+  /* WINE CARD */
+  .wcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;display:flex;gap:13px;cursor:pointer;transition:background .15s,border-color .15s;position:relative;overflow:hidden;animation:fadeUp .22s ease both}
+  .wcard:active{background:var(--bg3);border-color:var(--border2)}
+  .wcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px}
+  .wcard.rouge::before{background:var(--red)}
+  .wcard.blanc::before{background:var(--gold)}
+  .wcard.rose::before{background:var(--rose-c)}
+  .wcard.effervescent::before{background:var(--blue-c)}
+  .wcard.doux::before{background:var(--honey)}
+  .wphoto{width:52px;height:72px;border-radius:8px;flex-shrink:0;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:26px}
+  .wphoto img{width:100%;height:100%;object-fit:cover}
+  .winfo{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between}
+  .wdom{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+  .wapp{font-size:12px;color:var(--text-3);margin-bottom:8px}
+  .wtags{display:flex;gap:6px;flex-wrap:wrap}
+  .wtag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:100px;background:var(--bg4);color:var(--text-3);border:1px solid var(--border)}
+  .wtag.mil{background:rgba(232,184,109,0.12);color:var(--gold);border-color:rgba(232,184,109,0.25)}
+  .wright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;flex-shrink:0}
+  .wqty{font-size:22px;font-weight:700;color:var(--text-2);line-height:1}
+  .wqty span{font-size:11px;font-weight:400}
+
+  /* STATUS BADGE */
+  .sbadge{font-size:10px;font-weight:600;padding:4px 9px;border-radius:100px;letter-spacing:.04em;white-space:nowrap}
+  .s-early{background:rgba(106,184,212,.15);color:#6ab8d4;border:1px solid rgba(106,184,212,.3)}
+  .s-peak{background:rgba(46,204,138,.15);color:var(--em-text);border:1px solid rgba(46,204,138,.3)}
+  .s-decline{background:rgba(224,92,114,.15);color:#e87a8e;border:1px solid rgba(224,92,114,.3)}
+  .s-unknown{background:rgba(255,255,255,.06);color:var(--text-4);border:1px solid var(--border)}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:64px 24px}
+  .empty-ico{font-size:52px;margin-bottom:16px;opacity:.35}
+  .empty h3{font-size:20px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+  .empty p{font-size:13px;color:var(--text-3)}
+
+  /* BOTTOM NAV */
+  .bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bot));background:rgba(26,10,15,.94);border-top:1px solid var(--border2);display:flex;align-items:flex-start;padding-top:10px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:200}
+  .nitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 0;color:var(--text-4);transition:color .2s}
+  .nitem.on{color:var(--em)}
+  .nitem svg{width:22px;height:22px;stroke-width:1.8}
+  .nlbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .nwrap{position:relative;display:inline-flex}
+  .ndot{position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--em);border:2px solid var(--bg);display:none}
+
+  /* DETAIL */
+  .dheader{flex-shrink:0;padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between}
+  .back{background:none;border:none;color:var(--em-text);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;padding:6px 0}
+  .dphoto{margin:0 16px 18px;height:210px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
+  .dphoto img{width:100%;height:100%;object-fit:cover}
+  .dphoto-ph{font-size:72px;opacity:.2}
+  .dphoto-btn{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.55);border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);backdrop-filter:blur(8px)}
+  .dname{font-size:26px;font-weight:700;letter-spacing:-.4px;padding:0 20px;margin-bottom:3px}
+  .dsub{padding:0 20px 18px;color:var(--text-3);font-size:13px}
+  .stitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);padding:18px 20px 10px}
+  .igrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px}
+  .icell{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 14px}
+  .icell-l{font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:5px}
+  .icell-v{font-size:15px;font-weight:600;color:var(--text)}
+  .icell-v.hi{color:var(--em-text);font-size:18px}
+  .icell-v.gold{color:var(--gold);font-size:18px}
+
+  /* MATURITY */
+  .mblock{margin:8px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:16px}
+  .mblock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .mrange{font-size:13px;color:var(--text-3);font-weight:500}
+  .mbar{height:8px;border-radius:4px;background:var(--bg4);position:relative;overflow:visible;margin-bottom:10px}
+  .mtrack{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--s-early),var(--s-peak) 50%,var(--s-decline));width:100%}
+  .mpin{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--text);border:3px solid var(--bg);transform:translate(-50%,-50%);box-shadow:0 0 0 2px var(--em);transition:left .5s cubic-bezier(.4,0,.2,1)}
+  .mlabels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-4);font-weight:500}
+  .mgarde{margin-top:12px;font-size:13px;color:var(--text-2);line-height:1.65}
+
+  /* AI BLOCK */
+  .aiblock{margin:8px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:16px}
+  .aihd{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .aidot{width:7px;height:7px;border-radius:50%;background:var(--em);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+  .ailbl{font-size:10px;font-weight:700;color:var(--em-text);letter-spacing:.1em;text-transform:uppercase}
+  .aitxt{font-size:13px;color:var(--text-2);line-height:1.7}
+  .aishi{height:56px;border-radius:8px;background:linear-gradient(90deg,var(--bg4) 25%,var(--bg3) 50%,var(--bg4) 75%);background-size:200% 100%;animation:shi 1.4s infinite}
+  @keyframes shi{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  .chip{padding:5px 12px;border-radius:100px;background:var(--em-dim);color:var(--em-text);border:1px solid rgba(46,204,138,.25);font-size:12px;font-weight:500}
+
+  /* QTY CONTROLS */
+  .qctrl{display:flex;align-items:center;justify-content:space-between;margin:8px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 18px}
+  .qlbl{font-size:13px;font-weight:500;color:var(--text-2)}
+  .qrow{display:flex;align-items:center;gap:18px}
+  .qbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border2);background:var(--bg4);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+  .qbtn:active{background:var(--em-dim);border-color:var(--em);color:var(--em-text)}
+  .qnum{font-size:30px;font-weight:700;color:var(--text);min-width:36px;text-align:center}
+
+  /* FORM */
+  .fscroll{flex:1;overflow-y:auto;padding:0 16px 30px;-webkit-overflow-scrolling:touch}
+  .fscroll::-webkit-scrollbar{display:none}
+  .fsec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--em-text);margin:22px 0 10px}
+  .fg{margin-bottom:12px}
+  .fl{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:block}
+  .fi,.fs{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+  .fi:focus,.fs:focus{border-color:var(--em)}
+  .fi::placeholder{color:var(--text-4)}
+  .fs{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232ecc8a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pup{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:26px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+  .pup:active{border-color:var(--em);background:var(--em-dim)}
+  .pup-ico{font-size:30px;margin-bottom:8px}
+  .pup-txt{font-size:12px;color:var(--text-3);font-weight:500}
+  .pup-prev{width:70px;height:96px;border-radius:8px;object-fit:cover;border:1px solid var(--border2);margin-bottom:8px}
+  .ai-row{display:flex;align-items:center;gap:10px;background:var(--em-dim);border:1px solid rgba(46,204,138,.25);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;transition:background .15s;margin-top:4px}
+  .ai-row:active{background:var(--em-mid)}
+  .ai-row-txt{font-size:13px;font-weight:600;color:var(--em-text)}
+  .sub-btn{width:100%;padding:17px;background:var(--em);border:none;border-radius:var(--radius);color:#0d2b1e;font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer;margin-top:26px;transition:transform .12s,opacity .12s}
+  .sub-btn:active{transform:scale(.98);opacity:.88}
+
+  /* CE SOIR */
+  .cs-area{padding:22px 16px 16px;flex-shrink:0}
+  .cs-title{font-size:28px;font-weight:700;letter-spacing:-.5px;color:var(--text);margin-bottom:4px}
+  .cs-sub{font-size:13px;color:var(--text-3);margin-bottom:20px}
+  .cs-wrap{position:relative}
+  .cs-in{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:16px 56px 16px 16px;color:var(--text);font-family:var(--font);font-size:16px;outline:none;transition:border-color .2s}
+  .cs-in::placeholder{color:var(--text-4);font-style:italic}
+  .cs-in:focus{border-color:var(--em)}
+  .cs-go{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;background:var(--em);border:none;color:#0d2b1e;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .15s}
+  .cs-go:active{opacity:.75}
+  .sgcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;display:flex;gap:14px;cursor:pointer;position:relative;overflow:hidden;transition:background .15s}
+  .sgcard:active{background:var(--bg3)}
+  .sgcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px}
+  .sgcard.rouge::before{background:var(--red)}
+  .sgcard.blanc::before{background:var(--gold)}
+  .sgcard.rose::before{background:var(--rose-c)}
+  .sgcard.effervescent::before{background:var(--blue-c)}
+  .sgcard.doux::before{background:var(--honey)}
+  .sg-score{font-size:30px;font-weight:700;color:var(--em-text);min-width:48px;line-height:1}
+  .sg-score span{font-size:11px;font-weight:500;color:var(--text-4);display:block}
+  .sg-info{flex:1}
+  .sg-name{font-size:16px;font-weight:600;margin-bottom:4px}
+  .sg-reason{font-size:12px;color:var(--text-3);line-height:1.55;margin-bottom:8px}
+
+  /* MODAL */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;align-items:flex-end;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .overlay.on{display:flex}
+  .sheet{width:100%;background:var(--bg2);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;padding:12px 20px calc(20px + var(--safe-bot));max-height:75vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.4,0,.2,1)}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sh-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 18px}
+  .sh-title{font-size:20px;font-weight:700;margin-bottom:18px}
+  .sh-opt{padding:15px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:14px;font-size:15px;font-weight:500;transition:color .15s}
+  .sh-opt:last-of-type{border-bottom:none}
+  .sh-opt:active{color:var(--em-text)}
+  .sh-ico{font-size:22px;width:30px;text-align:center}
+  .sh-cancel{width:100%;padding:14px;margin-top:14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text-3);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:calc(var(--nav-h) + var(--safe-bot) + 14px);left:50%;transform:translateX(-50%) translateY(12px);background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:11px 22px;border-radius:100px;font-size:13px;font-weight:600;opacity:0;transition:all .25s;z-index:500;white-space:nowrap;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .wcard:nth-child(1){animation-delay:.03s}
+  .wcard:nth-child(2){animation-delay:.06s}
+  .wcard:nth-child(3){animation-delay:.09s}
+  .wcard:nth-child(4){animation-delay:.12s}
+  .wcard:nth-child(5){animation-delay:.15s}
+  select option{background:#240e15}
+</style>
+</head>
+<body>
+
+<!-- CAVE -->
+<div class="screen active" id="screen-cave">
+  <div class="ph">
+    <div><div class="ph-title">Ma Cave 🍷</div><div class="ph-sub" id="cave-sub">— bouteilles</div></div>
+    <button class="ph-btn" onclick="showScreen('add')">+ Ajouter</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-v" id="st-total">0</div><div class="stat-l">Bouteilles</div></div>
+    <div class="stat"><div class="stat-v em" id="st-peak">0</div><div class="stat-l">À point</div></div>
+    <div class="stat"><div class="stat-v" id="st-invest" style="font-size:18px">—</div><div class="stat-l">Investi €</div></div>
+  </div>
+  <div class="filters">
+    <button class="flt on" onclick="setFilter('all',this)">Tout</button>
+    <button class="flt" onclick="setFilter('rouge',this)"><span class="cdot" style="background:var(--red)"></span>Rouge</button>
+    <button class="flt" onclick="setFilter('blanc',this)"><span class="cdot" style="background:var(--gold)"></span>Blanc</button>
+    <button class="flt" onclick="setFilter('rose',this)"><span class="cdot" style="background:var(--rose-c)"></span>Rosé</button>
+    <button class="flt" onclick="setFilter('effervescent',this)"><span class="cdot" style="background:var(--blue-c)"></span>Effervescent</button>
+    <button class="flt" onclick="setFilter('peak',this)">⚡ À point</button>
+  </div>
+  <div class="scroll" id="wine-list"></div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen" id="screen-detail">
+  <div class="dheader">
+    <button class="back" onclick="showScreen('cave')">← Cave</button>
+    <button class="back" onclick="showSortie()" style="color:var(--text-3);font-weight:500">Sortie ›</button>
+  </div>
+  <div class="scroll" style="padding:0 0 24px"><div id="detail-body"></div></div>
+</div>
+
+<!-- CE SOIR -->
+<div class="screen" id="screen-cesoir">
+  <div class="cs-area">
+    <div class="cs-title">Ce soir…</div>
+    <div class="cs-sub">Quel plat préparez-vous ?</div>
+    <div class="cs-wrap">
+      <input class="cs-in" id="plat" type="text" placeholder="agneau, risotto, saumon…">
+      <button class="cs-go" onclick="doCesoir()">→</button>
+    </div>
+  </div>
+  <div class="scroll" id="cs-res" style="padding-top:4px">
+    <div style="text-align:center;padding:48px 20px">
+      <div style="font-size:40px;margin-bottom:12px;opacity:.3">🥂</div>
+      <div style="font-size:16px;font-weight:500;color:var(--text-3)">Saisissez votre plat<br>pour des suggestions depuis votre cave</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD -->
+<div class="screen" id="screen-add">
+  <div class="ph">
+    <div class="ph-title">Nouvelle bouteille</div>
+    <button class="back" onclick="showScreen('cave')" style="color:var(--text-3);font-size:14px;font-weight:500">Annuler</button>
+  </div>
+  <div class="fscroll">
+    <div class="fsec">Photo de l'étiquette</div>
+    <div class="pup" onclick="document.getElementById('fi-photo').click()">
+      <div id="pup-inner"><div class="pup-ico">📷</div><div class="pup-txt">Prendre une photo ou choisir dans la galerie</div></div>
+      <input type="file" id="fi-photo" accept="image/*" capture="environment" style="display:none" onchange="onPhoto(event)">
+    </div>
+    <div class="fsec">Identification</div>
+    <div class="fg"><label class="fl">Domaine / Producteur *</label><input class="fi" id="fi-dom" type="text" placeholder="ex : Château Margaux"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Millésime *</label><input class="fi" id="fi-mil" type="number" placeholder="2019" min="1900" max="2030"></div>
+      <div class="fg"><label class="fl">Couleur *</label>
+        <select class="fs" id="fi-col" onchange="updateApp()">
+          <option value="">—</option><option value="rouge">Rouge</option><option value="blanc">Blanc</option>
+          <option value="rose">Rosé</option><option value="effervescent">Effervescent</option><option value="doux">Doux / Liquoreux</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Région *</label>
+        <select class="fs" id="fi-reg" onchange="updateApp()">
+          <option value="">—</option><option>Bordeaux</option><option>Bourgogne</option><option>Rhône</option>
+          <option>Loire</option><option>Alsace</option><option>Champagne</option><option>Languedoc</option>
+          <option>Provence</option><option>Sud-Ouest</option><option>Italie</option><option>Espagne</option>
+          <option>Nouveau Monde</option><option>Autre</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Appellation</label><select class="fs" id="fi-app"><option value="">— région d'abord</option></select></div>
+    </div>
+    <div class="fg"><label class="fl">Cépage principal</label>
+      <select class="fs" id="fi-cep">
+        <option value="">—</option>
+        <optgroup label="Rouges"><option>Cabernet Sauvignon</option><option>Merlot</option><option>Pinot Noir</option><option>Syrah / Shiraz</option><option>Grenache</option><option>Cabernet Franc</option><option>Mourvèdre</option><option>Malbec</option><option>Tempranillo</option><option>Nebbiolo</option><option>Sangiovese</option><option>Gamay</option></optgroup>
+        <optgroup label="Blancs"><option>Chardonnay</option><option>Sauvignon Blanc</option><option>Riesling</option><option>Chenin Blanc</option><option>Viognier</option><option>Gewurztraminer</option><option>Pinot Gris</option><option>Muscadet</option><option>Marsanne</option></optgroup>
+        <optgroup label="Autre"><option>Assemblage Bordeaux</option><option>Assemblage Rhône</option><option>Autre</option></optgroup>
+      </select>
+    </div>
+    <div class="fsec">Stock & Prix</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Quantité</label><input class="fi" id="fi-qty" type="number" value="1" min="1"></div>
+      <div class="fg"><label class="fl">Format</label>
+        <select class="fs" id="fi-fmt"><option value="75cl">75cl</option><option value="37.5cl">37,5cl (demi)</option><option value="150cl">Magnum</option><option value="300cl">Jéroboam</option></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Prix achat (€/btl)</label><input class="fi" id="fi-pa" type="number" placeholder="0.00" step="0.01"></div>
+      <div class="fg"><label class="fl">Prix marché (€)</label><input class="fi" id="fi-pm" type="number" placeholder="IA →" step="0.01"></div>
+    </div>
+    <div class="fsec">Garde</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">À partir de</label><input class="fi" id="fi-deb" type="number" placeholder="2025"></div>
+      <div class="fg"><label class="fl">Jusqu'à</label><input class="fi" id="fi-fin" type="number" placeholder="2035"></div>
+    </div>
+    <div class="ai-row" onclick="estimIA()">
+      <div class="aidot"></div>
+      <span class="ai-row-txt">Estimer garde + prix marché avec l'IA</span>
+      <span style="margin-left:auto;color:var(--em-text);font-size:16px">→</span>
+    </div>
+    <div class="fsec">Notes</div>
+    <div class="fg"><label class="fl">Notes personnelles</label><textarea class="fi" id="fi-notes" rows="3" placeholder="Occasion, impressions…" style="resize:none;line-height:1.65"></textarea></div>
+    <button class="sub-btn" onclick="saveWine()">Ajouter à la cave</button>
+    <div style="height:16px"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="bnav">
+  <div class="nitem on" id="n-cave" onclick="showScreen('cave')">
+    <div class="nwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <span class="nlbl">Cave</span>
+  </div>
+  <div class="nitem" id="n-cesoir" onclick="showScreen('cesoir')">
+    <div class="nwrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <div class="ndot" id="ndot"></div>
+    </div>
+    <span class="nlbl">Ce soir</span>
+  </div>
+  <div class="nitem" id="n-add" onclick="showScreen('add')">
+    <div class="nwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+    <span class="nlbl">Ajouter</span>
+  </div>
+</nav>
+
+<!-- SORTIE MODAL -->
+<div class="overlay" id="sortie-ov" onclick="closeSortie(event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Enregistrer une sortie</div>
+    <div class="sh-opt" onclick="doSortie('consomme')"><div class="sh-ico">🍷</div><div><div>Consommé</div><div style="font-size:12px;color:var(--text-4);margin-top:2px">Bouteille dégustée</div></div></div>
+    <div class="sh-opt" onclick="doSortie('offert')"><div class="sh-ico">🎁</div><div><div>Offert</div><div style="font-size:12px;color:var(--text-4);margin-top:2px">Cadeau ou partage</div></div></div>
+    <div class="sh-opt" onclick="doSortie('vendu')"><div class="sh-ico">💶</div><div><div>Vendu</div><div style="font-size:12px;color:var(--text-4);margin-top:2px">Cession à un tiers</div></div></div>
+    <button class="sh-cancel" onclick="closeSortie()">Annuler</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APPS={Bordeaux:['Médoc','Pauillac','Saint-Estèphe','Margaux','Saint-Julien','Listrac','Moulis','Saint-Émilion','Pomerol','Fronsac','Pessac-Léognan','Graves','Sauternes','Barsac','Entre-Deux-Mers'],Bourgogne:['Chablis','Gevrey-Chambertin','Chambolle-Musigny','Vosne-Romanée','Nuits-Saint-Georges','Pommard','Volnay','Meursault','Puligny-Montrachet','Chassagne-Montrachet','Mâcon','Pouilly-Fuissé','Beaujolais'],Rhône:['Côte-Rôtie','Condrieu','Hermitage','Crozes-Hermitage','Saint-Joseph','Cornas','Châteauneuf-du-Pape','Gigondas','Vacqueyras','Côtes du Rhône'],Loire:['Muscadet','Anjou','Saumur','Bourgueil','Chinon','Vouvray','Montlouis','Sancerre','Pouilly-Fumé','Menetou-Salon'],Alsace:['Riesling Grand Cru','Gewurztraminer Grand Cru','Pinot Gris Grand Cru','Pinot Noir Alsace','Muscat Alsace',"Crémant d'Alsace"],Champagne:['Brut','Blanc de Blancs','Blanc de Noirs','Rosé','Millésimé','Prestige'],Languedoc:['Languedoc','Pic Saint-Loup','La Clape','Faugères','Saint-Chinian','Corbières','Minervois','Fitou'],Provence:["Côtes de Provence","Bandol","Cassis","Coteaux d'Aix","Les Baux de Provence"],'Sud-Ouest':['Bergerac','Pécharmant','Cahors','Madiran','Jurançon','Irouléguy','Gaillac'],Italie:['Barolo','Barbaresco','Brunello di Montalcino','Chianti Classico','Amarone','Valpolicella','Soave','Prosecco','Franciacorta','Bolgheri'],Espagne:['Rioja','Ribera del Duero','Priorat','Penedès','Rías Baixas','Cava'],'Nouveau Monde':['Napa Valley','Sonoma','Marlborough','Barossa Valley','Mendoza','Stellenbosch'],Autre:['AOC Locale','IGP','Vin de Pays','Autre']};
+
+let wines=JSON.parse(localStorage.getItem('cave-wines')||'[]');
+let activeFilter='all',curWineId=null,photoB64=null;
+
+function showScreen(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nitem').forEach(x=>x.classList.remove('on'));
+  document.getElementById('screen-'+s).classList.add('active');
+  const nm={cave:'n-cave',cesoir:'n-cesoir',add:'n-add',detail:'n-cave'}[s];
+  if(nm)document.getElementById(nm).classList.add('on');
+  if(s==='cave')renderCave();
+  if(s==='add')resetForm();
+}
+
+function status(w){
+  const y=new Date().getFullYear();
+  if(!w.debut&&!w.fin)return'unknown';
+  const d=w.debut||y,f=w.fin||y+20;
+  if(y<d)return'early';if(y>f)return'decline';
+  return((y-d)/(f-d))>0.72?'decline':'peak';
+}
+const sTxt={early:'Trop tôt',peak:'À point',decline:'Déclin',unknown:'—'};
+const cIco={rouge:'🍷',blanc:'🥂',rose:'🌸',effervescent:'🍾',doux:'🍯'};
+
+function renderCave(){
+  const list=document.getElementById('wine-list');
+  const src=activeFilter==='all'?wines:activeFilter==='peak'?wines.filter(w=>status(w)==='peak'):wines.filter(w=>w.couleur===activeFilter);
+  const total=wines.reduce((a,w)=>a+(+w.qty||0),0);
+  const peak=wines.filter(w=>status(w)==='peak').reduce((a,w)=>a+(+w.qty||0),0);
+  const invest=wines.reduce((a,w)=>a+((+w.prixAchat||0)*(+w.qty||0)),0);
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-peak').textContent=peak;
+  document.getElementById('st-invest').textContent=invest>0?Math.round(invest)+' €':'—';
+  document.getElementById('cave-sub').textContent=`${total} bouteille${total!==1?'s':''}`;
+  document.getElementById('ndot').style.display=peak>0?'block':'none';
+  if(!src.length){list.innerHTML=`<div class="empty"><div class="empty-ico">🍾</div><h3>Cave vide</h3><p>Ajoutez votre première bouteille</p></div>`;return;}
+  list.innerHTML=src.map((w,i)=>{
+    const st=status(w);
+    const ph=w.photo?`<div class="wphoto"><img src="${w.photo}"></div>`:`<div class="wphoto">${cIco[w.couleur]||'🍾'}</div>`;
+    return`<div class="wcard ${w.couleur}" style="animation-delay:${i*.04}s" onclick="showDetail('${w.id}')">
+      ${ph}
+      <div class="winfo">
+        <div><div class="wdom">${w.domaine}</div><div class="wapp">${[w.appellation,w.region].filter(Boolean).join(' · ')||'—'}</div></div>
+        <div class="wtags">${w.millesime?`<span class="wtag mil">${w.millesime}</span>`:''} ${w.cepage?`<span class="wtag">${w.cepage}</span>`:''}</div>
+      </div>
+      <div class="wright"><div class="wqty">${w.qty}<span> btl</span></div><span class="sbadge s-${st}">${sTxt[st]}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(f,el){activeFilter=f;document.querySelectorAll('.flt').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderCave();}
+
+function showDetail(id){
+  curWineId=id;
+  const w=wines.find(x=>x.id===id);if(!w)return;
+  showScreen('detail');
+  const st=status(w),y=new Date().getFullYear();
+  let pct=50;
+  if(w.debut&&w.fin&&w.fin>w.debut)pct=Math.max(5,Math.min(93,((y-w.debut)/(w.fin-w.debut))*100));
+  const ph=w.photo?`<img src="${w.photo}">`:`<div class="dphoto-ph">${cIco[w.couleur]||'🍾'}</div>`;
+  document.getElementById('detail-body').innerHTML=`
+    <div class="dphoto">${ph}
+      <div class="dphoto-btn" onclick="document.getElementById('photo-det').click()">📷 Changer</div>
+      <input type="file" id="photo-det" accept="image/*" capture="environment" style="display:none" onchange="changeDetPhoto(event,'${w.id}')">
+    </div>
+    <div class="dname">${w.domaine}</div>
+    <div class="dsub">${[w.appellation,w.region,w.millesime].filter(Boolean).join(' · ')}</div>
+    <div class="igrid">
+      <div class="icell"><div class="icell-l">Couleur</div><div class="icell-v" style="text-transform:capitalize">${w.couleur||'—'}</div></div>
+      <div class="icell"><div class="icell-l">Cépage</div><div class="icell-v">${w.cepage||'—'}</div></div>
+      <div class="icell"><div class="icell-l">Format</div><div class="icell-v">${w.format||'75cl'}</div></div>
+      <div class="icell"><div class="icell-l">Stock</div><div class="icell-v hi">${w.qty} btl</div></div>
+      <div class="icell"><div class="icell-l">Prix achat</div><div class="icell-v gold">${w.prixAchat?w.prixAchat+' €':'—'}</div></div>
+      <div class="icell"><div class="icell-l">Prix marché</div><div class="icell-v gold">${w.prixMarche?w.prixMarche+' €':'—'}</div></div>
+    </div>
+    <div class="stitle">Fenêtre de dégustation</div>
+    <div class="mblock">
+      <div class="mblock-top"><span class="sbadge s-${st}">${sTxt[st]}</span><span class="mrange">${w.debut||'?'} – ${w.fin||'?'}</span></div>
+      <div class="mbar"><div class="mtrack"></div><div class="mpin" style="left:${pct}%"></div></div>
+      <div class="mlabels"><span>Trop tôt</span><span>Apogée</span><span>Déclin</span></div>
+      ${w.gardeNote?`<div class="mgarde">${w.gardeNote}</div>`:''}
+    </div>
+    <div class="stitle">Accords mets-vins</div>
+    <div class="aiblock" id="d-accords">
+      <div class="aihd"><div class="aidot"></div><span class="ailbl">IA</span></div>
+      ${w.accords?`<div class="chips">${w.accords.map(a=>`<span class="chip">${a}</span>`).join('')}</div>${w.accordsNote?`<div class="aitxt" style="margin-top:12px">${w.accordsNote}</div>`:''}` : `<div class="aishi"></div>`}
+    </div>
+    <div class="qctrl">
+      <span class="qlbl">Quantité en cave</span>
+      <div class="qrow">
+        <button class="qbtn" onclick="chgQty('${w.id}',-1)">−</button>
+        <div class="qnum" id="qn-${w.id}">${w.qty}</div>
+        <button class="qbtn" onclick="chgQty('${w.id}',+1)">+</button>
+      </div>
+    </div>
+    ${w.notes?`<div class="stitle">Notes</div><div class="aiblock"><div class="aitxt">${w.notes}</div></div>`:''}
+    <div style="height:8px"></div>`;
+  if(!w.accords)setTimeout(()=>genAccords(id),350);
+}
+
+function chgQty(id,d){
+  const w=wines.find(x=>x.id===id);if(!w)return;
+  w.qty=Math.max(0,(+w.qty||0)+d);saveW();
+  const el=document.getElementById('qn-'+id);if(el)el.textContent=w.qty;
+  if(w.qty===0){toast('Bouteille retirée de la cave');setTimeout(()=>showScreen('cave'),1100);}
+}
+
+function onPhoto(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{photoB64=ev.target.result;document.getElementById('pup-inner').innerHTML=`<img class="pup-prev" src="${photoB64}"><div class="pup-txt" style="color:var(--em-text);font-weight:600">Photo ajoutée ✓</div>`;};
+  r.readAsDataURL(f);
+}
+function changeDetPhoto(e,id){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{const w=wines.find(x=>x.id===id);if(w){w.photo=ev.target.result;saveW();showDetail(id);}};
+  r.readAsDataURL(f);
+}
+
+function updateApp(){
+  const reg=document.getElementById('fi-reg').value,sel=document.getElementById('fi-app');
+  sel.innerHTML=reg&&APPS[reg]?APPS[reg].map(a=>`<option>${a}</option>`).join(''):"<option value=''>— région d'abord</option>";
+}
+function resetForm(){
+  ['fi-dom','fi-mil','fi-pa','fi-pm','fi-deb','fi-fin','fi-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fi-col','fi-reg','fi-cep'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  document.getElementById('fi-qty').value=1;updateApp();photoB64=null;
+  document.getElementById('pup-inner').innerHTML=`<div class="pup-ico">📷</div><div class="pup-txt">Prendre une photo ou choisir dans la galerie</div>`;
+}
+function saveWine(){
+  const dom=document.getElementById('fi-dom').value.trim(),mil=document.getElementById('fi-mil').value,col=document.getElementById('fi-col').value;
+  if(!dom||!mil||!col){toast('Domaine, millésime et couleur requis');return;}
+  const w={id:Date.now().toString(),domaine:dom,millesime:+mil,couleur:col,region:document.getElementById('fi-reg').value,appellation:document.getElementById('fi-app').value,cepage:document.getElementById('fi-cep').value,qty:+document.getElementById('fi-qty').value||1,format:document.getElementById('fi-fmt').value,prixAchat:document.getElementById('fi-pa').value,prixMarche:document.getElementById('fi-pm').value,debut:+document.getElementById('fi-deb').value||null,fin:+document.getElementById('fi-fin').value||null,notes:document.getElementById('fi-notes').value.trim(),photo:photoB64||null,accords:null,accordsNote:null,gardeNote:null,createdAt:Date.now()};
+  wines.unshift(w);saveW();toast('Bouteille ajoutée ✓');setTimeout(()=>showScreen('cave'),600);
+}
+
+async function genAccords(id){
+  const w=wines.find(x=>x.id===id);if(!w||w.accords)return;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Tu es sommelier expert. Vin: ${w.domaine}, ${w.appellation||w.region}, ${w.millesime}, ${w.couleur}, cépage ${w.cepage||'non précisé'}.\nRéponds UNIQUEMENT en JSON valide sans markdown:\n{"accords":["plat1","plat2","plat3","plat4","plat5"],"note":"conseil dégustation 1-2 phrases max 50 mots"}\nLes accords = plats concrets en français.`}]})});
+    const data=await res.json();
+    const txt=data.content?.map(c=>c.text||'').join('');
+    const p=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    w.accords=p.accords;w.accordsNote=p.note;saveW();
+    const el=document.getElementById('d-accords');
+    if(el)el.innerHTML=`<div class="aihd"><div class="aidot"></div><span class="ailbl">IA</span></div><div class="chips">${w.accords.map(a=>`<span class="chip">${a}</span>`).join('')}</div>${w.accordsNote?`<div class="aitxt" style="margin-top:12px">${w.accordsNote}</div>`:''}`;
+  }catch(e){const el=document.getElementById('d-accords');if(el)el.innerHTML=`<div class="aihd"><div class="aidot"></div><span class="ailbl">IA</span></div><div class="aitxt" style="color:var(--text-4)">Accords non disponibles</div>`;}
+}
+
+async function estimIA(){
+  const dom=document.getElementById('fi-dom').value.trim(),mil=document.getElementById('fi-mil').value;
+  if(!dom||!mil){toast("Saisissez domaine et millésime d'abord");return;}
+  toast('⏳ Estimation en cours…');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Expert en vins. Vin: ${dom}, ${document.getElementById('fi-app').value||document.getElementById('fi-reg').value}, millésime ${mil}, ${document.getElementById('fi-col').value}, cépage ${document.getElementById('fi-cep').value||'non précisé'}.\nRéponds UNIQUEMENT en JSON valide sans markdown:\n{"debut":2025,"fin":2032,"prixMarche":45,"gardeNote":"conseil 1-2 phrases max 40 mots"}`}]})});
+    const data=await res.json();
+    const p=JSON.parse(data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim());
+    if(p.debut)document.getElementById('fi-deb').value=p.debut;
+    if(p.fin)document.getElementById('fi-fin').value=p.fin;
+    if(p.prixMarche)document.getElementById('fi-pm').value=p.prixMarche;
+    toast('✓ Estimation complétée');
+  }catch(e){toast('Estimation indisponible');}
+}
+
+async function doCesoir(){
+  const plat=document.getElementById('plat').value.trim();if(!plat)return;
+  if(!wines.length){document.getElementById('cs-res').innerHTML=`<div style="text-align:center;padding:48px;color:var(--text-3);font-size:16px;font-weight:500">Cave vide</div>`;return;}
+  const box=document.getElementById('cs-res');
+  box.innerHTML=`<div style="padding:0 16px"><div class="aiblock"><div class="aihd"><div class="aidot"></div><span class="ailbl">Analyse en cours…</span></div><div class="aishi"></div></div></div>`;
+  const wl=wines.map(w=>`ID:${w.id}|${w.domaine} ${w.millesime}|${w.couleur}|${w.appellation||w.region}|${w.cepage||''}|stock:${w.qty}|statut:${status(w)}`).join('\n');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Sommelier expert. Cave:\n${wl}\n\nPlat: "${plat}"\nSélectionne les 3 meilleures bouteilles (stock>0, priorise statut peak).\nRéponds UNIQUEMENT en JSON valide sans markdown:\n{"suggestions":[{"id":"ID_exact","score":92,"raison":"pourquoi ce vin va avec ce plat max 20 mots"}]}`}]})});
+    const data=await res.json();
+    const p=JSON.parse(data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim());
+    if(!p.suggestions?.length)throw new Error();
+    box.innerHTML=`<div style="padding:0 16px"><div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Suggestions pour « ${plat} »</div>${p.suggestions.map(s=>{const w=wines.find(x=>x.id===s.id);if(!w)return'';return`<div class="sgcard ${w.couleur}" onclick="showDetail('${w.id}')"><div class="sg-score">${s.score}<span>/100</span></div><div class="sg-info"><div class="sg-name">${w.domaine} ${w.millesime}</div><div class="sg-reason">${s.raison}</div><span class="sbadge s-${status(w)}">${sTxt[status(w)]}</span></div></div>`;}).join('')}</div>`;
+  }catch(e){box.innerHTML=`<div style="text-align:center;padding:48px;color:var(--text-3);font-size:16px;font-weight:500">Suggestions indisponibles</div>`;}
+}
+
+function showSortie(){document.getElementById('sortie-ov').classList.add('on');}
+function closeSortie(e){if(!e||e.target===document.getElementById('sortie-ov'))document.getElementById('sortie-ov').classList.remove('on');}
+function doSortie(type){
+  const w=wines.find(x=>x.id===curWineId);if(!w)return;
+  document.getElementById('sortie-ov').classList.remove('on');
+  if(w.qty>0){w.qty=(+w.qty||1)-1;saveW();const m={consomme:'Bonne dégustation 🍷',offert:'Belle attention 🎁',vendu:'Vendu ✓'};toast(m[type]);setTimeout(()=>w.qty===0?showScreen('cave'):showDetail(w.id),900);}
+  else toast('Stock déjà à zéro');
+}
+
+function saveW(){localStorage.setItem('cave-wines',JSON.stringify(wines));}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200);}
+
+document.getElementById('plat').addEventListener('keydown',e=>{if(e.key==='Enter')doCesoir();});
+renderCave();
+</script>
+</body>
+</html>
